@@ -1,9 +1,9 @@
 namespace SalesProcessor.Infrastructure.Configuration.FileGenerator
 {
-    public class FileGeneratorSettings
+    public class FileGeneratorSettings : GenericSettings
     {
-        public string OutDirectory {get; set;}
-        public string OutFileNamePattern {get; set;} 
-        public string OutFileExtension {get; set;}
+        public string outDirectory {get; set;}
+        public string outFileNamePattern {get; set;} 
+        public string outFileExtension {get; set;}
     }
 }

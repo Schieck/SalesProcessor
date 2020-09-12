@@ -1,8 +1,8 @@
 namespace SalesProcessor.Infrastructure.Configuration.FileWatcher
 {
-    public class FileWatcherSettings
+    public class FileWatcherSettings : GenericSettings
     {
-        public string InDirectory {get; set;}
-        public string InFileExtension {get; set;}
+        public string inDirectory {get; set;}
+        public string inFileExtension {get; set;}
     }
 }
