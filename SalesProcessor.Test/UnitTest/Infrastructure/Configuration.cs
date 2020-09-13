@@ -1,4 +1,4 @@
-namespace SalesProcessor.Test.Infrastructure
+namespace SalesProcessor.Test.UnitTest.Infrastructure
 {
     using Xunit;
     using SalesProcessor.Infrastructure.Configuration.FileWatcher;
@@ -75,9 +75,11 @@ namespace SalesProcessor.Test.Infrastructure
             
             //Act
             loggingSettings.logFileOutput = expectedValue;
+            loggingSettings.logLevel = expectedValue;
 
             //Assert
             Assert.Equal(loggingSettings.logFileOutput, expectedValue);
+            Assert.Equal(loggingSettings.logLevel, expectedValue);
         }
 
         [Fact]

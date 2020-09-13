@@ -1,10 +1,10 @@
 using System.IO;
 
-namespace SalesProcessor.Infrastructure.FileWatcher
+namespace SalesProcessor.Domain.FileWatcher
 {
     public interface IFileWatcher
     {
-         void watch();
+         void Watch();
          void OnChanged(object source, FileSystemEventArgs e);
     }
 }

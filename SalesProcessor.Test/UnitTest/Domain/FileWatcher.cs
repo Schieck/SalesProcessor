@@ -1,25 +1,30 @@
-namespace SalesProcessor.Tests.Infrastructure
+namespace SalesProcessor.Test.UnitTest.Domain
 {
     using Xunit;
-    using SalesProcessor.Infrastructure.FileWatcher;
+    using SalesProcessor.Domain.FileWatcher;
     using SalesProcessor.Infrastructure.Configuration.FileWatcher;
     using Serilog;
     using Serilog.Sinks.TestCorrelator;
     using FluentAssertions;
     using System.IO;
+    using Moq;
+    using SalesProcessor.Domain.LotAnalyzer;
+    using System.Threading.Tasks;
 
     public class FileWatcher
     {
         IFileWatcher _sut;
         FileWatcherSettings _configuration;
+        Mock<ILotAnalyzerService> _lotAnalyzerService;
         ILogger _logger;
         public FileWatcher(){
-            _logger = new LoggerConfiguration().WriteTo.Sink(new TestCorrelatorSink()).CreateLogger();;
+            _logger = new LoggerConfiguration().WriteTo.Sink(new TestCorrelatorSink()).CreateLogger();
             _configuration = new FileWatcherSettings(){
                 inDirectory = "data/in",
                 inFileExtension = "dat"
             };
-            _sut = new SalesProcessor.Infrastructure.FileWatcher.FileWatcher(_logger, _configuration);
+            _lotAnalyzerService = new Mock<ILotAnalyzerService>();
+            _sut = new SalesProcessor.Domain.FileWatcher.FileWatcher(_logger, _lotAnalyzerService.Object, _configuration);
         }
 
         [Fact]
@@ -31,7 +36,7 @@ namespace SalesProcessor.Tests.Infrastructure
             using (TestCorrelator.CreateContext())
             {
                 //Act
-                _sut.watch();
+                _sut.Watch();
 
                 //Assert
                 TestCorrelator.GetLogEventsFromCurrentContext()
@@ -42,23 +47,17 @@ namespace SalesProcessor.Tests.Infrastructure
         }
 
         [Fact]
-        public void OnChanged_WhenAlways_ShouldLog(){
+        public void OnChanged_WhenAlways_ShouldCallAnalyzeFileWithRetry(){
             //Arrange
             object source = new object();
-            FileSystemEventArgs e = null;
-            var expectedMessage = "A new Lot has been found and will be processed!";
+            FileSystemEventArgs e = new FileSystemEventArgs(WatcherChangeTypes.Created, "", "Test");
+            var expected = new FileInfo(e.FullPath);
+            
+            //Act
+            _sut.OnChanged(source, e);
 
-            using (TestCorrelator.CreateContext())
-            {
-                //Act
-                _sut.OnChanged(source, e);
-
-                //Assert
-                TestCorrelator.GetLogEventsFromCurrentContext()
-                    .Should().ContainSingle()
-                    .Which.MessageTemplate.Text
-                    .Should().Be(expectedMessage);
-            }
+            //Assert
+            _lotAnalyzerService.Verify(m => m.AnalyzeFileWithRetry(It.Is<FileInfo>(x => x.Name == "Test")));
         }
     }
 }

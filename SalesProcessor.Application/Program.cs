@@ -3,61 +3,88 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SalesProcessor.Domain.LotAnalyzer;
+using SalesProcessor.Domain.FileWatcher;
 using SalesProcessor.Infrastructure.Configuration.FileWatcher;
 using SalesProcessor.Infrastructure.Configuration.Logging;
-using SalesProcessor.Infrastructure.FileWatcher;
+using SalesProcessor.Infrastructure.StreamReader;
 using Serilog;
+using Serilog.Events;
 using Serilog.Formatting.Compact;
 
 
-namespace SalesProcessor
+namespace SalesProcessor.Application
 {
-    class Program
+    public class Program
     {
         public static IConfigurationRoot _configuration;
-        private static ILogger _logger;
-        private static IServiceProvider _services;
+        public static ILogger _logger;
+        public static IServiceProvider _services;
 
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             Configure();
 
             //Monitor folder to see if has something to process
-            _services.GetService<IFileWatcher>().watch();
+            _services.GetService<IFileWatcher>().Watch();
 
             //Don`t stop until the user request
             new System.Threading.AutoResetEvent(false).WaitOne();
         }
 
-        private static void Configure(){
+        public static void Configure(){
 
             _configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
                 .Build();
 
             _logger = ConfigureLogger();
-            _logger.Information("Logger configured!");
 
             _services = ConfigureServices();
         }
-        private static ILogger ConfigureLogger()
+        public static ILogger ConfigureLogger()
         {
             //To follow the requested pattern, all directories will be inside the %HOMEPATH%
             var loggerConfiguration = _configuration.GetSection("LoggingSettings").Get<LoggingSettings>();
             var logFileOutPath = (loggerConfiguration.homePath + '\\' + loggerConfiguration.logFileOutput);
 
+            LogEventLevel logLevel;
+            switch (loggerConfiguration.logLevel)
+            {
+                case "debug":
+                    logLevel = LogEventLevel.Debug;
+                    break;
+                case "information":
+                    logLevel = LogEventLevel.Information;
+                    break;
+                case "warning":
+                    logLevel = LogEventLevel.Warning;
+                    break;
+                case "error":
+                    logLevel = LogEventLevel.Error;
+                    break;
+                default:
+                    logLevel = LogEventLevel.Error;
+                    break;
+            }
+
             return new LoggerConfiguration()
                 .Enrich.FromLogContext()
                 .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
                 .WriteTo.RollingFile(new CompactJsonFormatter(), logFileOutPath)
+                .MinimumLevel.Is(logLevel)
                 .CreateLogger();
         }
 
-        private static IServiceProvider ConfigureServices(){
+        public static IServiceProvider ConfigureServices(){
             var fileWatcherConfiguration = _configuration.GetSection("FileWatcherSettings").Get<FileWatcherSettings>();
 
             var serviceProvider = new ServiceCollection()
-                .AddSingleton<IFileWatcher>(new FileWatcher(_logger, fileWatcherConfiguration))
+                .AddScoped<ILotAnalyzerService, LotAnalyzerService>()
+                .AddScoped<IFileWatcher, FileWatcher>()
+                .AddScoped<IStreamReader, Infrastructure.StreamReader.StreamReader>()
+                .AddSingleton<FileWatcherSettings>(fileWatcherConfiguration)
+                .AddSingleton<ILogger>(_logger)
                 .BuildServiceProvider();
 
             return serviceProvider;
