@@ -1,5 +1,7 @@
 using System.IO;
 using System.Threading.Tasks;
+using SalesProcessor.Domain.ReportGenerator;
+using SalesProcessor.Infrastructure.Configuration.Lot;
 using SalesProcessor.Infrastructure.StreamReader;
 using Serilog;
 
@@ -9,17 +11,21 @@ namespace SalesProcessor.Domain.LotAnalyzer
     {
         private static ILogger _logger;
         private static IStreamReader _streamReader;
+        private static IReportGeneratorService _reportGeneratorService;
+        private static LotSettings _lotconfiguration;
 
-        public LotAnalyzerService(ILogger logger, IStreamReader streamReader){
+        public LotAnalyzerService(ILogger logger, IStreamReader streamReader, IReportGeneratorService reportGeneratorService, LotSettings lotconfiguration){
             _logger = logger;
             _streamReader = streamReader;
+            _lotconfiguration = lotconfiguration;
+            _reportGeneratorService = reportGeneratorService;
         }
         public async Task AnalyzeFileWithRetry(FileInfo file)
         {
             try{
-                _logger.Information("Analyzing lot " + file.Name + "!");
+               _logger.Information("Analyzing lot " + file.Name + "!");
                await AnalyzeFile(file);
-            }catch(IOException e){
+            }catch{
                 _logger.Warning("The lot " + file.Name + " failed analysis, the analysis will be retried!");
                 
                 if(AnalyzeFile(file).Exception != null){
@@ -30,14 +36,26 @@ namespace SalesProcessor.Domain.LotAnalyzer
 
         public async Task AnalyzeFile(FileInfo file){
             try{
+                var lot = new Lot.Lot(_lotconfiguration);
+
                 using (System.IO.StreamReader sr = _streamReader.GetStreamReader(file.FullName))
                 {
                     string s;
+                    int currentLine = 0;
                     while ((s = sr.ReadLine()) != null)
                     {
-                        _logger.Information(s);
-                    }                
+                        //We need to abstract this information to handle better and log if some information is not correct.
+                        try{
+                            lot.AddData(s);
+                        }catch(System.Exception e){
+                            _logger.Warning("Problem in line " + currentLine + " in the lot " + file.Name + " : " + e.Message);
+                        }
+
+                        currentLine++;
+                    }   
                 }
+
+                //await _reportGeneratorService.GenerateReport(lot);
             }catch(IOException e){
                 _logger.Warning( "Error ocurred when opening lot:" + e.Message);
                 throw e;
@@ -54,7 +72,7 @@ namespace SalesProcessor.Domain.LotAnalyzer
                 await this.AnalyzeFileWithRetry(file);
             }
 
-            _logger.Information("Completed files analisis in " + directory + " folder!");
+            _logger.Information("Completed files analysis in " + directory + " folder!");
         }
     }
 }

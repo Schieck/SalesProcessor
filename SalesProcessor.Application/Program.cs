@@ -6,12 +6,13 @@ using Microsoft.Extensions.DependencyInjection;
 using SalesProcessor.Domain.LotAnalyzer;
 using SalesProcessor.Domain.FileWatcher;
 using SalesProcessor.Infrastructure.Configuration.FileWatcher;
+using SalesProcessor.Infrastructure.Configuration.Lot;
 using SalesProcessor.Infrastructure.Configuration.Logging;
 using SalesProcessor.Infrastructure.StreamReader;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
-
+using SalesProcessor.Domain.ReportGenerator;
 
 namespace SalesProcessor.Application
 {
@@ -78,12 +79,16 @@ namespace SalesProcessor.Application
 
         public static IServiceProvider ConfigureServices(){
             var fileWatcherConfiguration = _configuration.GetSection("FileWatcherSettings").Get<FileWatcherSettings>();
+            var lotConfiguration = _configuration.GetSection("LotSettings").Get<LotSettings>();
+
 
             var serviceProvider = new ServiceCollection()
                 .AddScoped<ILotAnalyzerService, LotAnalyzerService>()
                 .AddScoped<IFileWatcher, FileWatcher>()
                 .AddScoped<IStreamReader, Infrastructure.StreamReader.StreamReader>()
+                .AddScoped<IReportGeneratorService, ReportGeneratorService>()
                 .AddSingleton<FileWatcherSettings>(fileWatcherConfiguration)
+                .AddSingleton<LotSettings>(lotConfiguration)
                 .AddSingleton<ILogger>(_logger)
                 .BuildServiceProvider();
 
