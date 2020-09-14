@@ -13,6 +13,8 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
 using SalesProcessor.Domain.ReportGenerator;
+using SalesProcessor.Infrastructure.Configuration.FileGenerator;
+using SalesProcessor.Infrastructure.FileGenerator;
 
 namespace SalesProcessor.Application
 {
@@ -78,16 +80,18 @@ namespace SalesProcessor.Application
         }
 
         public static IServiceProvider ConfigureServices(){
+            var fileGeneratorConfiguration = _configuration.GetSection("FileGeneratorSettings").Get<FileGeneratorSettings>();
             var fileWatcherConfiguration = _configuration.GetSection("FileWatcherSettings").Get<FileWatcherSettings>();
             var lotConfiguration = _configuration.GetSection("LotSettings").Get<LotSettings>();
-
 
             var serviceProvider = new ServiceCollection()
                 .AddScoped<ILotAnalyzerService, LotAnalyzerService>()
                 .AddScoped<IFileWatcher, FileWatcher>()
                 .AddScoped<IStreamReader, Infrastructure.StreamReader.StreamReader>()
                 .AddScoped<IReportGeneratorService, ReportGeneratorService>()
+                .AddScoped<IFileGenerator, FileGenerator>()
                 .AddSingleton<FileWatcherSettings>(fileWatcherConfiguration)
+                .AddSingleton<FileGeneratorSettings>(fileGeneratorConfiguration)
                 .AddSingleton<LotSettings>(lotConfiguration)
                 .AddSingleton<ILogger>(_logger)
                 .BuildServiceProvider();

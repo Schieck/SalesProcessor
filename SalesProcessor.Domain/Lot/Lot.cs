@@ -9,17 +9,20 @@ namespace SalesProcessor.Domain.Lot
     {
         private LotSettings _configuration;
 
+        public string name;
+
         public List<Customer.Customer> customers;
 
         public List<Sale.Sale> sales;
 
         public List<Salesperson.Salesperson> salespersons;
         
-        public Lot(LotSettings configuration){
+        public Lot(LotSettings configuration, string fileName){
             _configuration = configuration;
             customers = new List<Customer.Customer>();
             sales = new List<Sale.Sale>();
             salespersons = new List<Salesperson.Salesperson>();
+            name = fileName;
         }
 
         public void AddData(string line)

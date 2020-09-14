@@ -18,7 +18,7 @@ namespace SalesProcessor.Test.UnitTest.Domain
         public void AddData_WhenSales_ShouldAddSale(){
             //Arrange
             var line = "003ç10ç[1-10-100,2-30-2.50,3-40-3.10]çPedro ";
-            var lot = new SalesProcessor.Domain.Lot.Lot(_configuration.Object);
+            var lot = new SalesProcessor.Domain.Lot.Lot(_configuration.Object, "Test");
             
             //Act
             lot.AddData(line);
@@ -31,7 +31,7 @@ namespace SalesProcessor.Test.UnitTest.Domain
         public void AddData_WhenCustomer_ShouldAddCustomer(){
             //Arrange
             var line = "002ç2345675434544345çJose da SilvaçRural";
-            var lot = new SalesProcessor.Domain.Lot.Lot(_configuration.Object);
+            var lot = new SalesProcessor.Domain.Lot.Lot(_configuration.Object, "Test");
             
             //Act
             lot.AddData(line);
@@ -44,7 +44,7 @@ namespace SalesProcessor.Test.UnitTest.Domain
         public void AddData_WhenSalesperson_ShouldAddSalesperson(){
             //Arrange
             var line = "001ç1234567891234çPedroç50000";
-            var lot = new SalesProcessor.Domain.Lot.Lot(_configuration.Object);
+            var lot = new SalesProcessor.Domain.Lot.Lot(_configuration.Object, "Test");
             
             //Act
             lot.AddData(line);
@@ -57,7 +57,7 @@ namespace SalesProcessor.Test.UnitTest.Domain
         public void AddData_WhenNotRecognized_ShouldThrow(){
             //Arrange
             var line = "008ç2345675434544345çJose da SilvaçRural";
-            var lot = new SalesProcessor.Domain.Lot.Lot(_configuration.Object);
+            var lot = new SalesProcessor.Domain.Lot.Lot(_configuration.Object, "Test");
             
             //Act
             Assert.ThrowsAny<System.Exception>(() => lot.AddData(line));
@@ -67,7 +67,7 @@ namespace SalesProcessor.Test.UnitTest.Domain
         public void AddSale_WhenWrongData_ShouldThrow(){
 
             //Arrange
-            var lot = new SalesProcessor.Domain.Lot.Lot(_configuration.Object);
+            var lot = new SalesProcessor.Domain.Lot.Lot(_configuration.Object, "Test");
 
             //Act and Assert
             Assert.ThrowsAny<System.Exception>(() => lot.AddSale(null));
@@ -77,7 +77,7 @@ namespace SalesProcessor.Test.UnitTest.Domain
         public void AddSalesperson_WhenWrongData_ShouldThrow(){
 
             //Arrange
-            var lot = new SalesProcessor.Domain.Lot.Lot(_configuration.Object);
+            var lot = new SalesProcessor.Domain.Lot.Lot(_configuration.Object, "Test");
 
             //Act and Assert
             Assert.ThrowsAny<System.Exception>(() => lot.AddSalesPerson(null));
@@ -87,7 +87,7 @@ namespace SalesProcessor.Test.UnitTest.Domain
         public void AddCustomer_WhenWrongData_ShouldThrow(){
 
             //Arrange
-            var lot = new SalesProcessor.Domain.Lot.Lot(_configuration.Object);
+            var lot = new SalesProcessor.Domain.Lot.Lot(_configuration.Object, "Test");
 
             //Act and Assert
             Assert.ThrowsAny<System.Exception>(() => lot.AddCustomer(null));

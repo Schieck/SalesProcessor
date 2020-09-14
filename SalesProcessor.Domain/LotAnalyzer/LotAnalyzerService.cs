@@ -36,7 +36,7 @@ namespace SalesProcessor.Domain.LotAnalyzer
 
         public async Task AnalyzeFile(FileInfo file){
             try{
-                var lot = new Lot.Lot(_lotconfiguration);
+                var lot = new Lot.Lot(_lotconfiguration, file.Name);
 
                 using (System.IO.StreamReader sr = _streamReader.GetStreamReader(file.FullName))
                 {
@@ -55,7 +55,7 @@ namespace SalesProcessor.Domain.LotAnalyzer
                     }   
                 }
 
-                //await _reportGeneratorService.GenerateReport(lot);
+                await _reportGeneratorService.GenerateReport(lot);
             }catch(IOException e){
                 _logger.Warning( "Error ocurred when opening lot:" + e.Message);
                 throw e;
